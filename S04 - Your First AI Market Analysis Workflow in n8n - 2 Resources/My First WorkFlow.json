@@ -1,0 +1,249 @@
+{
+  "name": "My First WorkFlow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        -96
+      ],
+      "id": "edcfe1a0-4be9-40d4-acf9-29dcba1fd6c8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/mock-api/?data=market-data-H1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        -288
+      ],
+      "id": "b717c8da-a447-44d6-82b6-6962676a9585",
+      "name": "H1 Candles"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/mock-api/?data=market-data-H4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "d7e4940d-f8dc-464f-9639-67cbac1d5672",
+      "name": "H4 Candles"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/mock-api/?data=market-data-D1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        96
+      ],
+      "id": "fd2d7425-f542-4db4-bda7-b7d884ed9984",
+      "name": "D1 Candles"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        -112
+      ],
+      "id": "cf82869d-12a9-4ab9-86e7-4c98b134c396",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "candles_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "0bb4f2c8-e0bf-45c7-badd-834e633805ba",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# ROLE\nYou are a market analyst from a top trading company reposnsible for market analysis.\n\n# TASK\nYou are given 3 timeframes of candles data for the instrument: {{ $json.candles_data[0].data.symbol }}. You task is to do a top down analaysis and come up with a bias of whether to sell or buy this market.\nUse the smart money concepts in deriving your bias.\n\n# DATA\n{{ JSON.stringify($json.candles_data) }}\n\n# REPONSE FORMAT\nRespond in JSON structure as following:\n{\n\"symbol\":\"{{ $json.candles_data[0].data.symbol }}\",\n\"direction\":\"\",\n\"sl\":\"\",\n\"tp\":\"\",\n\"reason\":\"\"\n}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "89c64c78-c064-4d35-84b1-a0cfe336fb60",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        224,
+        96
+      ],
+      "id": "4295910f-188d-4a72-aa72-bf3dc069fe08",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "32ADwUfT1oT4sDNn",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"symbol\":\"\",\n\"direction\":\"\",\n\"sl\":\"\",\n\"tp\":\"\",\n\"reason\":\"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        96
+      ],
+      "id": "05fffdfd-509b-4a0b-8cdf-647a3209bcaf",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "H1 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "H4 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "D1 Candles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "H1 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "D1 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "H4 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "84723b2a-ec8f-41b8-ae55-10c638c0552b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e2834960d0b450381e7a24e95d3263095e256ab7d1b65a75ce42fcbe0a19624c"
+  },
+  "id": "tIxbH4fnqrIGmu0z",
+  "tags": []
+}

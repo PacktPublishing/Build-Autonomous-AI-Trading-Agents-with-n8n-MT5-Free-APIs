@@ -1,0 +1,663 @@
+{
+  "name": "Market Analysis Model 2 Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Get Market data\n",
+        "height": 720,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -320
+      ],
+      "id": "f119c76b-cea7-4d7a-9bca-ff303db66e7f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/chart-image-api-v1/chart-image-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=last-7-days&timeframe=H4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -256
+      ],
+      "id": "165d713e-def2-4476-995f-456c14ca0991",
+      "name": "Get H4 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/chart-image-api-v1/chart-image-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=this-week&timeframe=H1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -96
+      ],
+      "id": "6ca3c5d3-c6f0-4a49-9821-38c32debea47",
+      "name": "Get H1 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/chart-image-api-v1/chart-image-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=today&timeframe=M15",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "372ca072-9149-4e07-a792-4e5999533528",
+      "name": "Get M15 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/chart-image-api-v1/chart-image-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=last-12-hours&timeframe=M5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        224
+      ],
+      "id": "a078ab79-9161-4e80-a132-b2aeeb158214",
+      "name": "Get M5 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "d56946eb-9588-45ae-a049-9be96516991c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "market_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "66da0f72-e4ac-4643-9c91-558f215b20dd",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// List of valid ISO currency codes (extend if needed)\nconst validCurrencies = [\n  \"USD\",\"EUR\",\"GBP\",\"JPY\",\"AUD\",\"NZD\",\"CAD\",\"CHF\",\n  \"CNY\",\"SEK\",\"NOK\",\"DKK\",\"ZAR\",\"MXN\",\"HKD\",\"SGD\"\n];\n\n// Special mappings for indices/CFDs\nconst specialMappings = {\n  \"US30\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"US500\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"USTEC\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"DE30\": [\n    \"EUR\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"UK30\": [\n    \"GBP\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n};\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const symbol = item.json.symbol || \"\";\n  let base = \"\";\n  let quote = \"\";\n\n  if (specialMappings[symbol]) {\n    [base, quote] = specialMappings[symbol];\n  } else if (symbol.length === 6) {\n    base = symbol.substring(0, 3);\n    quote = symbol.substring(3, 6);\n  } else if (symbol.length > 3) {\n    base = symbol.substring(0, symbol.length - 3);\n    quote = symbol.substring(symbol.length - 3);\n  }\n\n  // Validate against currency list and replace with explanation if invalid\n  if (!validCurrencies.includes(base)) {\n    base =\n      \"Base is not a currency of a country, so there are no future events. Only use the quote currency to analyse.\";\n  }\n  if (!validCurrencies.includes(quote)) {\n    quote =\n      \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\";\n  }\n\n  return {\n    json: {\n      symbol,\n      base,\n      quote,\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        592
+      ],
+      "id": "27d9628c-0b23-4438-8922-8ad0bc16255c",
+      "name": "Extract Currencies"
+    },
+    {
+      "parameters": {
+        "content": "## Get Future Events",
+        "height": 496,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        432
+      ],
+      "id": "3372f625-a7c1-47f4-a85b-12eb300f72b1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/news-api-v1/news-api.php?api_key=fAvjpL0WAJTfzeE1a&currency={{ $json.base }}&period=future&future_limit=this-week",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        528
+      ],
+      "id": "e3a76977-43a3-4ac2-962a-decfae124351",
+      "name": "Base Future Events"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/news-api-v1/news-api.php?api_key=fAvjpL0WAJTfzeE1a&currency={{ $json.quote }}&period=future&future_limit=this-week",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        736
+      ],
+      "id": "a12456b5-2c69-4682-a951-92a9a2437c7d",
+      "name": "Quote Future Events"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -128,
+        640
+      ],
+      "id": "e4d78739-1d22-4e1b-8e69-02d141c095e8",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "eco_calendar_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        48,
+        640
+      ],
+      "id": "e50140b7-baf6-473c-94b4-d390019e0a0f",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "content": "## Get News",
+        "height": 336,
+        "width": 230,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        832
+      ],
+      "id": "ff70faab-103f-4abc-a538-d30cf9019ffd",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/url-api.php?url=https://www.reuters.com/markets/econ-world/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        944
+      ],
+      "id": "04563468-b5e1-4a33-a3d6-3cf5d184509e",
+      "name": "Get News Data"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        464
+      ],
+      "id": "ae704d54-7d30-4922-8b8d-297a6f59e17c",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "pre_analysis_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        480
+      ],
+      "id": "0862b754-834e-4d12-9c1a-900b4ef0db9f",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"symbol\": \"\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1072,
+        0
+      ],
+      "id": "d78bac05-5c41-4296-8f56-54594b7dcf1a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert binary image to base64 in n8n Code node\n\n// Method 1: If you have binary data from a previous node\nconst binaryData = $input.first().binary;\n\n// Get the first binary property (adjust key name as needed)\nconst binaryKey = Object.keys(binaryData)[0]; // or specify like 'data', 'image', etc.\nconst imageData = binaryData[binaryKey];\n\n// Convert to base64\nconst base64String = imageData.data;\nconst mimeType = imageData.mimeType;\n\n// Create data URL format\nconst dataUrl = `data:${mimeType};base64,${base64String}`;\n\nreturn {\n  json: {\n    base64: base64String,\n    dataUrl: dataUrl,\n    mimeType: mimeType,\n    fileName: imageData.fileName || 'image'\n  }\n};\n\n// Method 2: Alternative approach if binary data structure is different\n/*\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  if (item.binary) {\n    const binaryKeys = Object.keys(item.binary);\n    \n    for (const key of binaryKeys) {\n      const binary = item.binary[key];\n      \n      results.push({\n        json: {\n          originalKey: key,\n          base64: binary.data,\n          dataUrl: `data:${binary.mimeType};base64,${binary.data}`,\n          mimeType: binary.mimeType,\n          fileName: binary.fileName || key\n        }\n      });\n    }\n  }\n}\n\nreturn results;\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -256
+      ],
+      "id": "234532ca-2fd1-4ec4-8a63-a8d0d04a7d35",
+      "name": "Convert to base 64"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert binary image to base64 in n8n Code node\n\n// Method 1: If you have binary data from a previous node\nconst binaryData = $input.first().binary;\n\n// Get the first binary property (adjust key name as needed)\nconst binaryKey = Object.keys(binaryData)[0]; // or specify like 'data', 'image', etc.\nconst imageData = binaryData[binaryKey];\n\n// Convert to base64\nconst base64String = imageData.data;\nconst mimeType = imageData.mimeType;\n\n// Create data URL format\nconst dataUrl = `data:${mimeType};base64,${base64String}`;\n\nreturn {\n  json: {\n    base64: base64String,\n    dataUrl: dataUrl,\n    mimeType: mimeType,\n    fileName: imageData.fileName || 'image'\n  }\n};\n\n// Method 2: Alternative approach if binary data structure is different\n/*\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  if (item.binary) {\n    const binaryKeys = Object.keys(item.binary);\n    \n    for (const key of binaryKeys) {\n      const binary = item.binary[key];\n      \n      results.push({\n        json: {\n          originalKey: key,\n          base64: binary.data,\n          dataUrl: `data:${binary.mimeType};base64,${binary.data}`,\n          mimeType: binary.mimeType,\n          fileName: binary.fileName || key\n        }\n      });\n    }\n  }\n}\n\nreturn results;\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -96
+      ],
+      "id": "6e7f44c7-1197-475c-92c6-ed135e482cfe",
+      "name": "Convert to base "
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert binary image to base64 in n8n Code node\n\n// Method 1: If you have binary data from a previous node\nconst binaryData = $input.first().binary;\n\n// Get the first binary property (adjust key name as needed)\nconst binaryKey = Object.keys(binaryData)[0]; // or specify like 'data', 'image', etc.\nconst imageData = binaryData[binaryKey];\n\n// Convert to base64\nconst base64String = imageData.data;\nconst mimeType = imageData.mimeType;\n\n// Create data URL format\nconst dataUrl = `data:${mimeType};base64,${base64String}`;\n\nreturn {\n  json: {\n    base64: base64String,\n    dataUrl: dataUrl,\n    mimeType: mimeType,\n    fileName: imageData.fileName || 'image'\n  }\n};\n\n// Method 2: Alternative approach if binary data structure is different\n/*\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  if (item.binary) {\n    const binaryKeys = Object.keys(item.binary);\n    \n    for (const key of binaryKeys) {\n      const binary = item.binary[key];\n      \n      results.push({\n        json: {\n          originalKey: key,\n          base64: binary.data,\n          dataUrl: `data:${binary.mimeType};base64,${binary.data}`,\n          mimeType: binary.mimeType,\n          fileName: binary.fileName || key\n        }\n      });\n    }\n  }\n}\n\nreturn results;\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        64
+      ],
+      "id": "81df6401-8440-4945-a2e6-4102f68cecf1",
+      "name": "Convert to base 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convert binary image to base64 in n8n Code node\n\n// Method 1: If you have binary data from a previous node\nconst binaryData = $input.first().binary;\n\n// Get the first binary property (adjust key name as needed)\nconst binaryKey = Object.keys(binaryData)[0]; // or specify like 'data', 'image', etc.\nconst imageData = binaryData[binaryKey];\n\n// Convert to base64\nconst base64String = imageData.data;\nconst mimeType = imageData.mimeType;\n\n// Create data URL format\nconst dataUrl = `data:${mimeType};base64,${base64String}`;\n\nreturn {\n  json: {\n    base64: base64String,\n    dataUrl: dataUrl,\n    mimeType: mimeType,\n    fileName: imageData.fileName || 'image'\n  }\n};\n\n// Method 2: Alternative approach if binary data structure is different\n/*\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  if (item.binary) {\n    const binaryKeys = Object.keys(item.binary);\n    \n    for (const key of binaryKeys) {\n      const binary = item.binary[key];\n      \n      results.push({\n        json: {\n          originalKey: key,\n          base64: binary.data,\n          dataUrl: `data:${binary.mimeType};base64,${binary.data}`,\n          mimeType: binary.mimeType,\n          fileName: binary.fileName || key\n        }\n      });\n    }\n  }\n}\n\nreturn results;\n*/"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        224
+      ],
+      "id": "1ae5c47e-61c4-4e51-b889-5efd8ec2e923",
+      "name": "Convert to base 2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "x-api-key",
+              "value": "PUT YOUR ANTROPIC API KEY HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1030,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"# ROLE\\nYou are an AI analysis for Mr Richchild. Your role is to analyse the market as a smart market analysist for a WallStreet Firm. Your methods must demonstrate expertese in Financial Markets. You must be predictive rather than reactive maning you must see the future before it hapopeens nbased in the data you are given. Your methodology should alwyas point to the next move rather than the move that already happened. Use history only for context but look foward and precduictthe next move.\\n\\n# TASK\\nYou are given 3 data points to work from \\n1. Current Chart data in candles - Used for technical analysis\\n2. Future economic events for the two currencies involved \\n3. Recent news from Reuters on the global economy (Choose whats relabevnt and discrd whats not relavent to the currencied s and econopmies in question)\\n\\n# INPUT DATA\\n\\n2. ECONOMIC CALENDAR DATA FOR FUTURE (Limited this week)\\n{{ $json.pre_analysis_data[1].escaped }}\\n\\n3. GLOBAL NEWS FROM REUTERS\\n{{ $json.pre_analysis_data[2].escaped }}\\n\\n# OUTPUT FORMAT\\n{\\n  \\\"symbol\\\":\\\"{{ $('When Executed by Another Workflow').item.json.symbol }}\\\",\\n  \\\"direction\\\":\\\"BUY/SELL/WAIT\\\",\\n  \\\"TP\\\":\\\"\\\",\\n  \\\"SL\\\":\\\"\\\",\\n  \\\"confidence\\\":\\\"1-100\\\",\\n  \\\"reason\\\":\\\"extensive reason on how you concluded your decision\\\"\\n}\"\n        },\n        {\n          \"type\": \"image\",\n          \"source\": {\n            \"type\": \"base64\",\n            \"media_type\": \"image/png\",\n            \"data\": \"{{ $json.pre_analysis_data[0].market_data[0].base64 }}\"\n          }\n        },\n        {\n          \"type\": \"image\",\n          \"source\": {\n            \"type\": \"base64\",\n            \"media_type\": \"image/png\",\n            \"data\": \"{{ $json.pre_analysis_data[0].market_data[1].base64 }}\"\n          }\n        },\n        {\n          \"type\": \"image\",\n          \"source\": {\n            \"type\": \"base64\",\n            \"media_type\": \"image/png\",\n            \"data\": \"{{ $json.pre_analysis_data[0].market_data[2].base64 }}\"\n          }\n        },\n        {\n          \"type\": \"image\",\n          \"source\": {\n            \"type\": \"base64\",\n            \"media_type\": \"image/png\",\n            \"data\": \"{{ $json.pre_analysis_data[0].market_data[3].base64 }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1232,
+        480
+      ],
+      "id": "6f5a5e71-12c0-493d-8311-6adb36bf054c",
+      "name": "Analyse Image"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For escaping JSON strings (adding escape characters)\nconst inputData = $input.all();\nconst outputData = [];\n\nfor (const item of inputData) {\n  try {\n    // Get the JSON data from the item\n    const jsonData = item.json;\n    \n    // Method 1: Escape JSON string (if you have a JSON string that needs escaping)\n    let escapedJson = '';\n    if (typeof jsonData === 'string') {\n      escapedJson = jsonData\n        .replace(/\\\\/g, '\\\\\\\\')   // Escape backslashes\n        .replace(/\"/g, '\\\\\"')     // Escape double quotes\n        .replace(/'/g, \"\\\\'\")     // Escape single quotes\n        .replace(/\\n/g, '\\\\n')    // Escape newlines\n        .replace(/\\r/g, '\\\\r')    // Escape carriage returns\n        .replace(/\\t/g, '\\\\t')    // Escape tabs\n        .replace(/\\b/g, '\\\\b')    // Escape backspace\n        .replace(/\\f/g, '\\\\f');   // Escape form feed\n    } else {\n      // Method 2: Convert object to escaped JSON string\n      escapedJson = JSON.stringify(jsonData)\n        .replace(/\\\\/g, '\\\\\\\\')\n        .replace(/\"/g, '\\\\\"');\n    }\n    \n    outputData.push({\n      json: {\n        original: jsonData,\n        escaped: escapedJson,\n        ready_for_api: JSON.stringify(jsonData) // Properly formatted JSON string\n      }\n    });\n    \n  } catch (error) {\n    outputData.push({\n      json: {\n        error: `Failed to escape JSON: ${error.message}`,\n        original: item.json\n      }\n    });\n  }\n}\n\nreturn outputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        640
+      ],
+      "id": "35dbb1f3-394b-4c4b-bf3f-18eafad15b5f",
+      "name": "Escape JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For escaping JSON strings (adding escape characters)\nconst inputData = $input.all();\nconst outputData = [];\n\nfor (const item of inputData) {\n  try {\n    // Get the JSON data from the item\n    const jsonData = item.json;\n    \n    // Method 1: Escape JSON string (if you have a JSON string that needs escaping)\n    let escapedJson = '';\n    if (typeof jsonData === 'string') {\n      escapedJson = jsonData\n        .replace(/\\\\/g, '\\\\\\\\')   // Escape backslashes\n        .replace(/\"/g, '\\\\\"')     // Escape double quotes\n        .replace(/'/g, \"\\\\'\")     // Escape single quotes\n        .replace(/\\n/g, '\\\\n')    // Escape newlines\n        .replace(/\\r/g, '\\\\r')    // Escape carriage returns\n        .replace(/\\t/g, '\\\\t')    // Escape tabs\n        .replace(/\\b/g, '\\\\b')    // Escape backspace\n        .replace(/\\f/g, '\\\\f');   // Escape form feed\n    } else {\n      // Method 2: Convert object to escaped JSON string\n      escapedJson = JSON.stringify(jsonData)\n        .replace(/\\\\/g, '\\\\\\\\')\n        .replace(/\"/g, '\\\\\"');\n    }\n    \n    outputData.push({\n      json: {\n        original: jsonData,\n        escaped: escapedJson,\n        ready_for_api: JSON.stringify(jsonData) // Properly formatted JSON string\n      }\n    });\n    \n  } catch (error) {\n    outputData.push({\n      json: {\n        error: `Failed to escape JSON: ${error.message}`,\n        original: item.json\n      }\n    });\n  }\n}\n\nreturn outputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        944
+      ],
+      "id": "ac4a9bba-e0ec-4a46-9923-922a544bb57d",
+      "name": "Escape JSON1"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "symbol": "GBPUSD"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Get H4 Candles": {
+      "main": [
+        [
+          {
+            "node": "Convert to base 64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get H1 Candles": {
+      "main": [
+        [
+          {
+            "node": "Convert to base ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get M15 Candles": {
+      "main": [
+        [
+          {
+            "node": "Convert to base 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get M5 Candles": {
+      "main": [
+        [
+          {
+            "node": "Convert to base 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Currencies": {
+      "main": [
+        [
+          {
+            "node": "Base Future Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Quote Future Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quote Future Events": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Base Future Events": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Escape JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get News Data": {
+      "main": [
+        [
+          {
+            "node": "Escape JSON1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Analyse Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get H4 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get M5 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get H1 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get M15 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Currencies",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get News Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to base 64": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to base ": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Convert to base 1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Convert to base 2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Escape JSON": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Escape JSON1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Analyse Image": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8b590a4f-def9-43fe-987e-124c44d09b54",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "22b98916a2ddd81bc619e21c147469ee64dbee5b2f52e6c692b2a846280ebdf2"
+  },
+  "id": "ojdi7XANbTjcTr1H",
+  "tags": []
+}

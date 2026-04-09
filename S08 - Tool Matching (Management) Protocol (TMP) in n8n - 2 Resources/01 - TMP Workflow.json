@@ -1,0 +1,455 @@
+{
+  "name": "TMP WORKFLOW",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -592,
+        -32
+      ],
+      "id": "eb959904-5470-4482-b733-9fd8c2b405d1",
+      "name": "When chat message received",
+      "webhookId": "d5dc3598-75ec-4f48-ab96-c99898ab0c61"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# WHO YOU ARE\nYou are an autonomous Agent for Mr David Richchild reposible for carrying out instructions that you are given. When given a task first check in which category does it belong amonge these:\n\n## CATEGORIES:\n{{ JSON.stringify($json.categories) }}\n\n# Mr Richchild has said: {{ $('When chat message received').item.json.chatInput }}. If his message requires you to do soming check for what can be done and to it! do not ask him\n\n- If Mr Richchild's query does not need you to use tools reply to him immeditetly.\n\n- Select a category or categories and then use the category name to chcekc capabilities in that category. \n- To check capabilities **use the tools** \"check_capabilities_1\" and or \"check_capabilities_2\" and or \"check_capabilities_3\". You can use more than one tool if there is need for checking multiple categories if not use only one of these tool.\n\n\n- HERE is the URL used to check capabilities for a cateory: https://arrissadata.com/api/tmp-tool-capabilities?api_key=arr_c4a029f32db3f4eb&category_name={category name here}\n\n- We you get capabilities now you can use the \"get_tool_1\" and or \"get_tool_2\" and or \"get_tool_3\". You can use more than one tool if there is need for checking multiple tools if not use only one of these tool.\n- HERE is the URL used to get a tool: https://arrissadata.com/api/tmp-get-tool?api_key=arr_c4a029f32db3f4eb&search_phrase={search_phrase}. Search phrase is on the capabilities list\n\n- You will get tool use format. \n- Study the tool use formats use the \"take_action_1\" and or \"take_action_2\" and or \"take_action_3\" depending or the number of actions you wnat to take.\n\n* Use the calculator tool to make calculations if needed\n\n# you can use tool more than once until you get what you are satisfied with\n# YOU MUST ACT AUTONOMOUSLY WITHOUT ASKING FOR PEROMISSION OR OPINION FROM MR RICHCHILD. MR RICHCHILD HAS GIVEN YOU 100% APPROVAL TO DO ANALYSTHING THAT YOU SEE FITBASED ON HIS MESSAGE\n# YOUR REPLY TO MR RICHCHILD MUST BE A COMPLETION OF WHAT HE ASKED YOU TO DO. NEVER RETURN A REPOSNSE WITH UNCOMPLETED TASK UNLESS IT FAILS. IF THINGS FAIL TRY ANOTHER WAY.\n\n# You can reuse a tool if there is an outstanding thing you have tto do reuse any tool.\n",
+        "options": {
+          "enableStreaming": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "d343ff65-c496-4f42-8ecc-08b399a10287",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/api/tmp-categories?api_key=arr_c4a029f32db3f4eb&exclude=market-analysis,chart-images",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -368,
+        -32
+      ],
+      "id": "b6fa5bc4-9f88-42c5-b688-db60f297fcea",
+      "name": "Get TMP Categories"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the check_capabilities_1 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        -352
+      ],
+      "id": "61bdacd8-6dc2-4850-9dc5-2ec11d1d1def",
+      "name": "check_capabilities_1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the check_capabilities_2 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        976,
+        -352
+      ],
+      "id": "026f8ebc-e5ef-4c34-90ab-256e0e3866ed",
+      "name": "check_capabilities_2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the check_capabilities_3 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -352
+      ],
+      "id": "32ca5eb5-156c-40fa-b962-d3954efb6ac4",
+      "name": "check_capabilities_3"
+    },
+    {
+      "parameters": {
+        "content": "## Check Capabilities\n",
+        "height": 240,
+        "width": 608
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -448
+      ],
+      "id": "4448b9fa-db78-4bd7-8a70-a4c63cd57e61",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Get Tool\n",
+        "height": 240,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        -128
+      ],
+      "id": "7f48a4c9-94d7-413a-bbbd-aae57c1d7e41",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the get_tool_1 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -32
+      ],
+      "id": "9264734b-aae4-418b-acdf-79a8e1ad029b",
+      "name": "get_tool_1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the get_tool_2 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        -32
+      ],
+      "id": "727b3303-f433-4d8c-8a0c-b5215036fc7f",
+      "name": "get_tool_2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the get_tool_3 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        976,
+        -32
+      ],
+      "id": "53c35e5f-7c80-4edb-8df3-c05d2f4f7e4e",
+      "name": "get_tool_3"
+    },
+    {
+      "parameters": {
+        "content": "## Take Action\n",
+        "height": 240,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        192
+      ],
+      "id": "03da128d-e2ba-44cd-88d0-47bc590ba7a4",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the take_action_1 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        288
+      ],
+      "id": "37bf20cd-e6f5-4b87-be54-57227d0422e8",
+      "name": "take_action_1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the take_action_2 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        288
+      ],
+      "id": "7db2edc9-b4b9-4b4b-a7d9-2891fda77baf",
+      "name": "take_action_2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is the take_action_3 tool",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        976,
+        288
+      ],
+      "id": "c99b7278-443b-4b86-9d44-ab56616d76fd",
+      "name": "take_action_3"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        176
+      ],
+      "id": "28dfbdfe-c9f5-4a61-826a-7e727608345c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        128,
+        176
+      ],
+      "id": "4e97d423-9d40-4e82-80da-f213f3d79a50",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        176
+      ],
+      "id": "df91827b-1c32-496d-8aed-7d0c2fa270c9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CSosvsBxlpQJ7mQV",
+          "name": "F GPT"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Get TMP Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get TMP Categories": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_capabilities_1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_capabilities_2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_capabilities_3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_tool_1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_tool_2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_tool_3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "take_action_1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "take_action_2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "take_action_3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "49b31b3f-e2e6-44f1-83e0-4c6a2b9a5e5c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e2834960d0b450381e7a24e95d3263095e256ab7d1b65a75ce42fcbe0a19624c"
+  },
+  "id": "FCzTAJyCIpgjigrs",
+  "tags": []
+}

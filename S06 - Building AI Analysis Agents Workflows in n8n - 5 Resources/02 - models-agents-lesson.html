@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson: Models vs Agents - Trading Automation Fundamentals</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .slideshow-container {
+            max-width: 1300px;
+            width: 95%;
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            padding: 70px;
+            text-align: center;
+            min-height: 750px;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #1a1a2e;
+            margin-bottom: 40px;
+            font-size: 4em;
+            font-weight: bold;
+        }
+
+        h2 {
+            color: #0f3460;
+            margin-bottom: 40px;
+            font-size: 3.2em;
+            font-weight: bold;
+        }
+
+        h3 {
+            color: #16213e;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        p {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-size: 1.6em;
+            font-weight: 500;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+            padding: 35px;
+            border-radius: 15px;
+            margin: 35px 0;
+            border-left: 8px solid #17a2b8;
+            font-size: 1.5em;
+            line-height: 1.7;
+        }
+
+        .key-point {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            padding: 35px;
+            border-radius: 15px;
+            margin: 35px 0;
+            border-left: 8px solid #f39c12;
+            font-size: 1.5em;
+            line-height: 1.7;
+        }
+
+        .navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 35px;
+            cursor: pointer;
+            font-size: 1.3em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #16213e;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-counter {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(15, 52, 96, 0.1);
+            padding: 12px 25px;
+            border-radius: 30px;
+            color: #0f3460;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        ul {
+            text-align: left;
+            max-width: 1000px;
+            margin: 0 auto;
+            font-size: 1.5em;
+        }
+
+        li {
+            margin: 20px 0;
+            color: #333;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .component-card {
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            border: 3px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .model-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #2196f3;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-color: #4caf50;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 40px 0;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.4em;
+        }
+
+        .comparison-table th {
+            background: #0f3460;
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .definition-box {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 8px solid #ffa000;
+            text-align: left;
+        }
+
+        .definition-box strong {
+            color: #e65100;
+            font-size: 1.2em;
+        }
+
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 1.2em;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .emoji-large {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Interactive Infographic Styles */
+        .infographic-container {
+            margin: 40px 0;
+            height: 600px;
+            position: relative;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border: 2px solid #dee2e6;
+            overflow: hidden;
+        }
+
+        .infographic-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .infographic-btn {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .infographic-btn:hover {
+            background: #16213e;
+        }
+
+        .infographic-btn.active {
+            background: #28a745;
+        }
+
+        .workflow-diagram {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 80px 40px 40px;
+        }
+
+        .workflow-diagram.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-steps {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .workflow-step {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-width: 140px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid;
+            position: relative;
+        }
+
+        .workflow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .workflow-step.active {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .workflow-arrow {
+            font-size: 2.5em;
+            color: #0f3460;
+            font-weight: bold;
+        }
+
+        .model-step { border-color: #2196f3; }
+        .agent-step { border-color: #4caf50; }
+
+        .step-description {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            max-width: 400px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .step-description.visible {
+            opacity: 1;
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .context-item {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.4em;
+            border: 3px solid #ddd;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .n8n-highlight {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 8px solid #007acc;
+            font-size: 1.4em;
+            line-height: 1.7;
+        }
+
+        .agent-circular {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .agent-center {
+            background: #4caf50;
+            color: white;
+            padding: 30px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .agent-orbit {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border: 3px dashed #4caf50;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        .orbit-step {
+            position: absolute;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-step:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 15;
+        }
+
+        /* Positioning orbit steps around the circle */
+        .orbit-step:nth-child(2) { top: 0%; left: 50%; }
+        .orbit-step:nth-child(3) { top: 15%; left: 85%; }
+        .orbit-step:nth-child(4) { top: 50%; left: 100%; }
+        .orbit-step:nth-child(5) { top: 85%; left: 85%; }
+        .orbit-step:nth-child(6) { top: 100%; left: 50%; }
+        .orbit-step:nth-child(7) { top: 85%; left: 15%; }
+        .orbit-step:nth-child(8) { top: 50%; left: 0%; }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container">
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">7</span>
+        </div>
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>🧠 Models vs Agents</h1>
+            <p style="font-size: 1.8em; color: #0f3460; margin-top: 60px;">
+                Understanding their roles in n8n trading automation
+            </p>
+            <div class="key-point">
+                <strong style="font-size: 1.3em;">Learning Objectives:</strong><br><br>
+                🧠 Understand Models (LLM Chain) vs Agents (AI Agent Node)<br>
+                💬 Learn how chat triggers work with Models<br>
+                📊 Explore interactive workflow infographics<br>
+                ⚡ Know when to use each approach in n8n
+            </div>
+        </div>
+
+        <!-- Slide 2: The Context -->
+        <div class="slide">
+            <h2>🎯 The Context in n8n</h2>
+            <p>In n8n trading automation, we have two distinct approaches:</p>
+            <div class="context-grid">
+                <div class="context-item">
+                    <span class="emoji-large">🧠</span>
+                    <strong>Models (LLM Chain)</strong><br>
+                    Reactive analysis systems triggered by requests or chat
+                </div>
+                <div class="context-item">
+                    <span class="emoji-large">🤖</span>
+                    <strong>Agents (AI Agent Node)</strong><br>
+                    Autonomous systems that use tools and make decisions
+                </div>
+            </div>
+            <div class="n8n-highlight">
+                <strong>n8n Implementation:</strong><br>
+                • <strong>Models:</strong> Use LLM Chain nodes, triggered by webhooks, chat, or manual triggers<br>
+                • <strong>Agents:</strong> Built using AI Agent nodes with tool integrations
+            </div>
+        </div>
+
+        <!-- Slide 3: What is a Model? -->
+        <div class="slide">
+            <h2>🧠 Models in n8n (LLM Chain)</h2>
+            <div class="definition-box">
+                <strong>Definition:</strong> Reactive systems using LLM Chain nodes that respond to requests and provide structured analysis.
+            </div>
+            <ul>
+                <li>💬 <strong>Chat Triggered:</strong> Can be triggered by chat interfaces in n8n</li>
+                <li>🔗 <strong>LLM Chain:</strong> Uses LLM Chain nodes for processing</li>
+                <li>📊 <strong>Process:</strong> Request → Fetch data → LLM analysis → Standardized output</li>
+                <li>🔄 <strong>Integration:</strong> Outputs feed other workflows or respond to chat</li>
+            </ul>
+            <div class="key-point">
+                <strong>Key Characteristics:</strong><br>
+                • Waits for external requests to start working<br>
+                • Provides analysis and recommendations<br>
+                • Returns structured data for other systems to use<br>
+                • Perfect for on-demand market analysis
+            </div>
+        </div>
+
+        <!-- Slide 4: Model Output Example -->
+        <div class="slide">
+            <h2>📤 Model Output Example</h2>
+            <p>Here's what a Model typically outputs when analyzing GBPUSD:</p>
+            <div class="json-output">
+{
+  "symbol": "GBPUSD",
+  "analysis": {
+    "trend": "bullish",
+    "confidence": 0.78,
+    "signals": {
+      "rsi": "oversold_recovery",
+      "ma_cross": "golden_cross"
+    }
+  },
+  "recommendation": "BUY",
+  "entry_price": 1.3485,
+  "stop_loss": 1.3450,
+  "take_profit": 1.3520,
+  "risk_reward_ratio": 2.1,
+  "timestamp": "2025-01-08T10:30:00Z",
+  "chat_response": "📈 GBPUSD showing strong bullish signals with golden cross confirmation"
+}
+            </div>
+            <div class="highlight">
+                <strong>This structured output can be:</strong><br>
+                • Sent back to a chat interface<br>
+                • Used by another n8n workflow<br>
+                • Stored in a database<br>
+                • Sent to external systems via API
+            </div>
+        </div>
+
+        <!-- Slide 5: What is an Agent? -->
+        <div class="slide">
+            <h2>🤖 Agents in n8n (AI Agent Node)</h2>
+            <div class="definition-box">
+                <strong>Definition:</strong> Autonomous systems built with AI Agent nodes that use tools, make decisions, and take actions independently.
+            </div>
+            <ul>
+                <li>🤖 <strong>AI Agent Node:</strong> Core node that provides autonomous behavior</li>
+                <li>🛠️ <strong>Tool Integration:</strong> Can use multiple tools (MT5, calculators, APIs)</li>
+                <li>⏰ <strong>Scheduled:</strong> Runs on intervals or event triggers</li>
+                <li>🧠 <strong>Memory:</strong> Maintains context and learns from actions</li>
+            </ul>
+            <div class="key-point">
+                <strong>Key Characteristics:</strong><br>
+                • Runs continuously on a schedule<br>
+                • Makes autonomous trading decisions<br>
+                • Uses multiple tools to gather information and execute trades<br>
+                • Learns from experience and adapts behavior
+            </div>
+        </div>
+
+        <!-- Slide 6: Interactive Workflow Infographics -->
+        <div class="slide">
+            <h2>📊 Interactive Workflow Infographics</h2>
+            <p>Click the buttons to explore the different workflow structures:</p>
+            
+            <div class="infographic-container">
+                <div class="infographic-controls">
+                    <button class="infographic-btn active" onclick="showInfographic('model')">🧠 Model Workflow</button>
+                    <button class="infographic-btn" onclick="showInfographic('agent')">🤖 Agent Workflow</button>
+                </div>
+
+                <!-- Model Workflow Diagram -->
+                <div class="workflow-diagram active" id="model-workflow">
+                    <div class="workflow-steps">
+                        <div class="workflow-step model-step" onclick="showStepDescription('Chat or webhook request triggers the model to start working')">
+                            💬<br>Chat/Request<br>Trigger
+                        </div>
+                        <div class="workflow-arrow">→</div>
+                        <div class="workflow-step model-step" onclick="showStepDescription('Model fetches current market data from MT5 or other sources')">
+                            🔍<br>Fetch Input<br>Data
+                        </div>
+                        <div class="workflow-arrow">→</div>
+                        <div class="workflow-step model-step" onclick="showStepDescription('LLM Chain analyzes the data using trading logic and AI')">
+                            🧠<br>LLM Chain<br>Analyze
+                        </div>
+                        <div class="workflow-arrow">→</div>
+                        <div class="workflow-step model-step" onclick="showStepDescription('Results are formatted into a consistent JSON structure')">
+                            📋<br>Standardize<br>Output
+                        </div>
+                        <div class="workflow-arrow">→</div>
+                        <div class="workflow-step model-step" onclick="showStepDescription('Structured response sent back to chat, API, or another workflow')">
+                            📤<br>Response<br>Output
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent Workflow Diagram -->
+                <div class="workflow-diagram" id="agent-workflow">
+                    <div class="agent-circular">
+                        <div class="agent-orbit"></div>
+                        <div class="agent-center">
+                            🤖<br>AI Agent<br>Core
+                        </div>
+                        <div class="orbit-step" onclick="showStepDescription('Agent runs automatically every few minutes based on schedule')">⏰ Schedule Trigger</div>
+                        <div class="orbit-step" onclick="showStepDescription('Gathers market analysis from various sources and models')">📊 Fetch Analysis</div>
+                        <div class="orbit-step" onclick="showStepDescription('Checks current positions, balance, and account status')">📈 Check Status</div>
+                        <div class="orbit-step" onclick="showStepDescription('AI Agent processes all data to understand current situation')">🧠 Understand Environment</div>
+                        <div class="orbit-step" onclick="showStepDescription('Agent decides what actions to take based on analysis')">🎯 Determine Actions</div>
+                        <div class="orbit-step" onclick="showStepDescription('Selects appropriate tools like MT5 API, calculators, etc.')">🛠️ Use Tools</div>
+                        <div class="orbit-step" onclick="showStepDescription('Evaluates results and stores experience in memory for learning')">📝 Store Memory</div>
+                    </div>
+                </div>
+
+                <div class="step-description" id="step-description"></div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Key Takeaways -->
+        <div class="slide">
+            <h2>🎯 Key Takeaways for n8n</h2>
+            <div class="two-column">
+                <div class="component-card model-card">
+                    <span class="emoji-large">🧠</span>
+                    <strong>Use Models When:</strong><br>
+                    • Building chat-based trading advisors<br>
+                    • Need on-demand market analysis<br>
+                    • Want structured responses for other systems<br>
+                    • Creating analysis APIs<br>
+                    • Human oversight required
+                </div>
+                <div class="component-card agent-card">
+                    <span class="emoji-large">🤖</span>
+                    <strong>Use Agents When:</strong><br>
+                    • Want fully automated trading<br>
+                    • Need continuous monitoring<br>
+                    • Require tool orchestration<br>
+                    • Want adaptive behavior<br>
+                    • Building autonomous systems
+                </div>
+            </div>
+            <div class="n8n-highlight">
+                <strong>🔧 n8n Implementation Guide:</strong><br>
+                • <strong>Models:</strong> Start with Chat Trigger → LLM Chain → Respond<br>
+                • <strong>Agents:</strong> Use Schedule Trigger → AI Agent → Tool integrations<br>
+                • <strong>Hybrid:</strong> Agent can call Model workflows as analysis tools
+            </div>
+            <div class="key-point">
+                <strong>⚡ Decision Framework:</strong><br>
+                • <strong>Interactive analysis?</strong> → Model with chat triggers<br>
+                • <strong>Autonomous trading?</strong> → Agent with AI Agent node<br>
+                • <strong>Both?</strong> → Agent that uses Model as analysis tool<br><br>
+                <em>Start with Models for learning, evolve to Agents for automation!</em>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">❮ Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next ❯</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showInfographic(type) {
+            // Update buttons
+            document.querySelectorAll('.infographic-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide diagrams
+            document.querySelectorAll('.workflow-diagram').forEach(diagram => diagram.classList.remove('active'));
+            document.getElementById(type + '-workflow').classList.add('active');
+            
+            // Hide step description
+            document.getElementById('step-description').classList.remove('visible');
+        }
+
+        function showStepDescription(description) {
+            const descriptionElement = document.getElementById('step-description');
+            descriptionElement.textContent = description;
+            descriptionElement.classList.add('visible');
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                descriptionElement.classList.remove('visible');
+            }, 4000);
+        }
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            currentSlideIndex += direction;
+            
+            if (currentSlideIndex < 0) {
+                currentSlideIndex = 0;
+            } else if (currentSlideIndex >= totalSlides) {
+                currentSlideIndex = totalSlides - 1;
+            }
+            
+            showSlide(currentSlideIndex);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (event.key === 'ArrowRight') {
+                changeSlide(1);
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', function() {
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>

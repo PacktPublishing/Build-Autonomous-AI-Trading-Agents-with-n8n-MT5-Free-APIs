@@ -1,0 +1,560 @@
+{
+  "name": "Market Analysis Model 1 Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Get Market data\n",
+        "height": 720,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -320
+      ],
+      "id": "19ea734e-ba70-422b-ba14-73ff578a0441",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/market-data-api-v1/market-data-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=last-7-days&timeframe=H4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -256
+      ],
+      "id": "feb9342d-260d-41c0-9c43-464af2ff86ac",
+      "name": "Get H4 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/market-data-api-v1/market-data-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=this-week&timeframe=H1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -96
+      ],
+      "id": "558bb387-a025-43e0-beba-f66ff3996d11",
+      "name": "Get H1 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/market-data-api-v1/market-data-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=today&timeframe=M15",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "4a6819a4-85a1-439c-9df1-e0e4205fb072",
+      "name": "Get M15 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/market-data-api-v1/market-data-api.php?api_key=fAvjpL0WAJTfzeE1a&symbol={{ $json.symbol }}&rangeType=last-12-hours&timeframe=M5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        224
+      ],
+      "id": "fd3629d4-41d5-4c53-ad9c-ed76e9540150",
+      "name": "Get M5 Candles",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        -48
+      ],
+      "id": "2173b25e-aa52-4947-a2c0-1c000757b603",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "market_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -16
+      ],
+      "id": "aface1cb-25e9-4068-88f9-606829d5a9c8",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// List of valid ISO currency codes (extend if needed)\nconst validCurrencies = [\n  \"USD\",\"EUR\",\"GBP\",\"JPY\",\"AUD\",\"NZD\",\"CAD\",\"CHF\",\n  \"CNY\",\"SEK\",\"NOK\",\"DKK\",\"ZAR\",\"MXN\",\"HKD\",\"SGD\"\n];\n\n// Special mappings for indices/CFDs\nconst specialMappings = {\n  \"US30\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"US500\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"USTEC\": [\n    \"USD\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"DE30\": [\n    \"EUR\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n  \"UK30\": [\n    \"GBP\",\n    \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\"\n  ],\n};\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const symbol = item.json.symbol || \"\";\n  let base = \"\";\n  let quote = \"\";\n\n  if (specialMappings[symbol]) {\n    [base, quote] = specialMappings[symbol];\n  } else if (symbol.length === 6) {\n    base = symbol.substring(0, 3);\n    quote = symbol.substring(3, 6);\n  } else if (symbol.length > 3) {\n    base = symbol.substring(0, symbol.length - 3);\n    quote = symbol.substring(symbol.length - 3);\n  }\n\n  // Validate against currency list and replace with explanation if invalid\n  if (!validCurrencies.includes(base)) {\n    base =\n      \"Base is not a currency of a country, so there are no future events. Only use the quote currency to analyse.\";\n  }\n  if (!validCurrencies.includes(quote)) {\n    quote =\n      \"Quote is not a currency of a country, so there are no future events. Only use the base currency to analyse.\";\n  }\n\n  return {\n    json: {\n      symbol,\n      base,\n      quote,\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        592
+      ],
+      "id": "41892dfa-f09b-42ee-be13-4cac0f718dc1",
+      "name": "Extract Currencies"
+    },
+    {
+      "parameters": {
+        "content": "## Get Future Events",
+        "height": 496,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        432
+      ],
+      "id": "2e1adda7-1240-4052-8eef-67adf8800149",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/news-api-v1/news-api.php?api_key=fAvjpL0WAJTfzeE1a&currency={{ $json.base }}&period=future&future_limit=this-week",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        528
+      ],
+      "id": "0d72b9d8-6fd9-41af-b35a-53bafc0aa9ed",
+      "name": "Base Future Events"
+    },
+    {
+      "parameters": {
+        "url": "=https://arrissadata.com/news-api-v1/news-api.php?api_key=fAvjpL0WAJTfzeE1a&currency={{ $json.quote }}&period=future&future_limit=this-week",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        736
+      ],
+      "id": "fad34354-80da-4f4a-9e88-96798017f254",
+      "name": "Quote Future Events"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -128,
+        640
+      ],
+      "id": "36d09b23-39d0-4439-82d3-57c3fead4fcf",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "eco_calendar_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        48,
+        640
+      ],
+      "id": "d25b3148-1068-4613-85e5-33947c286bd1",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "content": "## Get News",
+        "height": 336,
+        "width": 230,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        832
+      ],
+      "id": "2603f6be-fe18-463a-bb86-e5acc72ca317",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "url": "https://arrissadata.com/url-api.php?url=https://www.reuters.com/markets/econ-world/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        944
+      ],
+      "id": "2fbc8f46-1ee3-4a48-a776-884dd85666d1",
+      "name": "Get News Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# ROLE\nYou are an AI analysis for Mr Richchild. Your role is to analyse the market as a smart market analysist for a WallStreet Firm. Your methods must demonstrate expertese  in Financial Markets. You must be predictive rather than reactive maning you must see the future before it hapopeens nbased in the data you are given. Your methodology should alwyas point to the next move rather than the move that already happened. Use history only for context but look foward and precduictthe next move.\n\n# TASK\nYou are given 3 data points to work from \n1. Current Chart data in candles - Used for technical analysis\n2. Future economic events for the two currencies involved \n3. Recent news from Reuters on the global economy (Choose whats relabevnt and discrd whats not relavent to the currencied s and econopmies in question)\n\n# INPUT DATA\n1. TECHNICAL DATA\n{{ JSON.stringify($json.pre_analysis_data[0].market_data) }}\n\n2. ECONOMIC CALENDAR DATA FOR FUTURE (Limited this week)\n{{ JSON.stringify($json.pre_analysis_data[1].eco_calendar_data) }}\n\n3. GLOBAL NEWS FROM REUTERS\n{{ JSON.stringify($json.pre_analysis_data[2]) }}\n\n# OUTPUT FORMAT\n{\n  \"symbol\":\"{{ $('When Executed by Another Workflow').item.json.symbol }}\",\n  \"direction\":\"BUY/SELL/WAIT\",\n  \"TP\":\"\",\n  \"SL\":\"\",\n  \"confidence\":\"1-100\",\n  \"reason\":\"extensive reason on how you concluded your decision\"\n}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        816,
+        480
+      ],
+      "id": "6ae8282e-fd6d-4656-bb5b-c79e7f815d8f",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        464
+      ],
+      "id": "83edc847-e79c-426d-b75f-342f8f0caa71",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "pre_analysis_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        640,
+        480
+      ],
+      "id": "ab39c714-bd97-4a0b-9845-d38f9a868008",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        656
+      ],
+      "id": "4d517cd1-e228-448e-a12d-ed61a9c9a877",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "VWEx4ZWImP0U6Wn5",
+          "name": "My Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"symbol\":\"\",\n  \"direction\":\"\",\n  \"TP\":\"\",\n  \"SL\":\"\",\n  \"confidence\":\"\",\n  \"reason\":\"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        656
+      ],
+      "id": "21d31516-5219-4882-ae08-5b1e4188867d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"symbol\": \"\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        -16
+      ],
+      "id": "c06e4e4d-9547-47d3-9066-275a0006df42",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "symbol": "GBPUSD"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Get H4 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get H1 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get M15 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get M5 Candles": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Currencies": {
+      "main": [
+        [
+          {
+            "node": "Base Future Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Quote Future Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quote Future Events": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Base Future Events": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get News Data": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get H4 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get M5 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get H1 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get M15 Candles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Currencies",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get News Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f3a84704-ddd3-4173-8271-a7f7bd4a6a8e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "22b98916a2ddd81bc619e21c147469ee64dbee5b2f52e6c692b2a846280ebdf2"
+  },
+  "id": "oVB5sonIuuLas9AO",
+  "tags": []
+}
